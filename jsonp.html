@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/jquery.js"></script>
+</head>
+<body>
+
+<script>
+
+    var url='http://www.benzhonginfo.com/index.php?g=api&m=user&a=verificationH5&mobile='+13653668463+'&code='+1746123;
+
+    $.ajax({
+        type:"GET",
+        url:url,
+        dataType:"jsonp",
+        jsonp:"callback",
+        jsonpCallback:"jsonpCallback",
+        success:function(data){
+            alert(data.msg);
+        }
+    });
+
+    function jsonpCallback(data){
+        console.log(data);
+    }
+
+    /*
+    * jsonp 只能使用 get 请求，解决同源问题，返回 javascript 代码，因为 请求 javascript 文件是没有同源问题的
+    * 当请求数据类型为jsonp 时，会将 callback=jsonpCallback 加在 url 上
+    * 前台 javascript 中定义 jsonpCallback 函数，此函数必须定义在window下，也就是全局函数，否则找不见
+    * 后台获取请求的 callback 参数值 jsonpCallback，返回字符串 "jsonCallback(result)",result 为返回结果
+    * 请求返回的是 script tag ，首先会调用 jsonpCallback 函数，不管是否找到该函数，都会调用 success 函数
+    * 如果没有定义 jsonp 和 jsonpCallbck ，jsonp 默认为 Callback ，jsonpCallback 会是 Jquery 自动生成的函数
+    * */
+
+</script>
+
+</body>
+</html>
