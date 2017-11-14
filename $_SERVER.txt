@@ -21,10 +21,10 @@
 [CONTEXT_PREFIX]        =>
 [REQUEST_SCHEME]        => http
 [DOCUMENT_ROOT]         => E:/test
-[REMOTE_ADDR]           => 127.0.0.1
-[SERVER_PORT]           => 8086
-[SERVER_ADDR]           => 127.0.0.1
-[SERVER_NAME]           => www.test.com
+[REMOTE_ADDR]           => 127.0.0.1        # 当前用户 IP
+[SERVER_PORT]           => 8086             # 端口号
+[SERVER_ADDR]           => 127.0.0.1        # 但钱用户主机名
+[SERVER_NAME]           => www.test.com     # 服务器主机名称
 [SERVER_SOFTWARE]       => Apache/2.4.23 (Win32) OpenSSL/1.0.2j mod_fcgid/2.3.9
 [SERVER_SIGNATURE]      =>
 [SystemRoot]            => C:\Windows
