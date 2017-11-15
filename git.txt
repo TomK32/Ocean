@@ -1,0 +1,94 @@
+
+
+创建分支：		git branch dev-1.0
+创建分支并进入：	git checkout -b dev-1.0
+切换分支：		git checkout master
+显示当前分支：		git branch
+删除分支：		git branch -d dev-1.0
+
+
+合并分支到master：	
+			git checkout master
+			git merge dev-1.0
+
+解决冲突：
+			<<<<<<<HEAD
+				master 原有的内容
+			=======
+				dev-1.0 分支冲突的内容
+			>>>>>>>debug
+
+			解决冲突后执行 git commit
+
+查看git记录合并：
+			git log --graph --pretty=oneline --abbrev-commit
+
+
+推送分支到github：	
+			git checkout dev-1.0
+			git push -u origin dev-1.0
+
+
+===========================================
+
+克隆分支到本地：
+			git checkout -b dev origin/dev-1.0
+
+
+更新：
+			git checkout dev-1.0
+			git pull origin dev-1.0
+			git push origin dev-1.0
+
+本地tag管理
+			git tag -a v1.0 -m '1.0版本'
+			
+查看标签： 	git tag
+查看标签信息：	git show v1.0
+删除标签：	git tag -d v1.0
+
+把标签推送到远程：git push origin v1.0  或  git push origin --tags
+
+删除远程标签：	
+	git tag -d v1.0
+	git push origin :refs/tags/v.10
+
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
