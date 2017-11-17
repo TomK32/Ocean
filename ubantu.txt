@@ -1,0 +1,142 @@
+
+
+
+1.切换root用户
+	sudo su
+2.查看ubantu版本
+	cat /etc/issue
+3.更新源
+	sudo apt-get update
+	源保存的文件为：/etc/apt/sources.list
+
+==========================彻底删除nginx================
+
+	1 删除nginx，–purge包括配置文件
+
+	sudo apt-get --purge remove nginx
+
+	3 罗列出与nginx相关的软件
+
+	dpkg --get-selections|grep nginx
+
+	4 删除1.3查询出与nginx有关的软件
+
+	sudo apt-get --purge remove nginx
+	sudo apt-get --purge remove nginx-common
+	sudo apt-get --purge remove nginx-core	
+
+	这样就可以完全卸载掉nginx包括配置文件
+
+	5.查看nginx正在运行的进程，如果有就kill掉
+
+	ps -ef |grep nginx
+	看下nginx还有没有启动,一般执行完1后，nginx还是启动着的，如下：
+
+	stephen@stephen-OptiPlex-390:~$ ps -ef |grep nginx
+	root      7875  2317  0 15:02 ?        00:00:00 nginx: master process /usr/sbin/nginx
+	www-data  7876  7875  0 15:02 ?        00:00:00 nginx: worker process
+	www-data  7877  7875  0 15:02 ?        00:00:00 nginx: worker process
+	www-data  7878  7875  0 15:02 ?        00:00:00 nginx: worker process
+	www-data  7879  7875  0 15:02 ?        00:00:00 nginx: worker process
+	stephen   8321  3510  0 15:20 pts/0    00:00:00 grep --color=auto nginx
+
+	kill nginx进程
+
+	sudo kill  -9  7875 7876 7877 7879
+
+	4.全局查找与nginx相关的文件
+
+	sudo  find  /  -name  nginx*
+	5.依依删除4列出的所有文件
+
+	sudo rm -rf file
+	这样就彻底删除nginx了
+
+==========================彻底删除 php================
+
+sudo apt-get --purge remove libapache2-mod-php5 php5 php5-gd php5-mysql
+
+sudo apt-get autoremove php5
+
+删除关联，
+sudo find /etc -name "*php*" |xargs  rm -rf 
+
+清楚残留信息
+dpkg -l |grep ^rc|awk '{print $2}' |sudo xargs dpkg -P
+
+最后用 dpkg -l | grep php 和dpkg -l | grep php5 检查，如无返回即干净卸载
+
+彻底删除php
+sudo apt-get –purge remove libapache2-mod-php5 php5 php5-gd php5-mysql
+
+=============================ubantu 16.04 搭建lamp ======================
+
+1.安装Apache
+
+	sudo apt-get install apache2
+
+	测试： 浏览器访问http://Ubuntu的IP，出现It Works!网页。
+	查看状态： service apache2 status/start/stop/restart
+	Web目录： /var/www
+	安装目录： /etc/apache2/
+	全局配置： /etc/apache2/apache2.conf
+	监听端口： /etc/apache2/ports.conf
+	虚拟主机： /etc/apache2/sites-enabled/000-default.conf
+
+2.安装MySQL
+
+	sudo apt-get install mysql-server mysql-client
+
+	测试：mysql -u root -p
+	查看状态：service mysql status/start/stop/retart
+	查看监听端口的情况：netstat -tunpl 或 netstat -tap	
+
+	默认密码： /etc/mysql/debian.cnf
+		user     = debian-sys-maint
+		password = PBJ3tCzyk8VwpTnO
+
+
+3.安装PHP
+
+	sudo apt-get install php7.0
+
+	测试：php7.0 -v
+
+4.安装其他模块
+
+	sudo apt-get install libapache2-mod-php7.0
+	sudo apt-get install php7.0-mysql
+
+	重启服务
+	service apache2 restart
+	service mysql restart
+	测试Apache能否解析PHP
+	vim /var/www/html/phpinfo.php
+	文件中写：<?php echo phpinfo();?>
+	浏览器访问：http://ubuntu地址/phpinfo.php，出现PHP Version网页
+
+5.修改权限
+
+	sudo chmod 777 /var/www	
+
+6.安装phpMyAdmin
+
+	sudo apt-get install phpmyadmin
+
+	安装：选择apache2，点击确定。下一步选择是要配置数据库，并输入密码。
+	创建phpMyAdmin快捷方式：sudo ln -s /usr/share/phpmyadmin /var/www/html
+	启用Apache mod_rewrite模块：sudo a2enmod rewrite
+	重启服务：
+	service php7.0-fpm restart
+	service apache2 restart
+	测试：浏览器访问：http://ubuntu地址/phpmyadmin	
+
+7.配置Apache
+
+	vim /etc/apache2/apache2.conf
+
+	添加：
+	AddType application/x-httpd-php .php .htm .html
+	AddDefaultCharset UTF-8
+	重启Apache服务
+
