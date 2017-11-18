@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>angular-html</title>
+	<script type="text/javascript" src="http://apps.bdimg.com/libs/angular.js/1.4.6/angular.min.js"></script>
+</head>
+<body ng-app="app" ng-controller="ctrl">
+	<div ng-bind-html="showData|to_trusted"></div>
+
+	<script type="text/javascript">
+		var app = angular.module('app',[]);
+
+	    app.filter(
+	        'to_trusted', ['$sce', function ($sce) {
+	            return function (text) {
+	                return $sce.trustAsHtml(text);
+	            }
+	        }]
+	    );
+
+		app.controller('ctrl',function($scope){
+			$scope.showData = "<a href='#'>a 标签</a>";
+		});
+	</script>
+
+</body>
+</html>

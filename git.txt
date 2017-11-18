@@ -74,11 +74,9 @@ warning:You appear to have cloned an empty repository
 
 	$ sudo adduser git
 
-
 第三步，创建证书登录：
 
 	收集所有需要登录的用户的公钥，就是他们自己的id_rsa.pub文件，把所有公钥导入到/home/git/.ssh/authorized_keys文件里，一行一个。
-
 
 第四步，初始化Git仓库：
 
@@ -107,7 +105,6 @@ warning:You appear to have cloned an empty repository
 	
 
 剩下的推送就简单了。
-
 
 
 

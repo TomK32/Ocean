@@ -3,11 +3,25 @@
 
 1.切换root用户
 	sudo su
+	
 2.查看ubantu版本
 	cat /etc/issue
+
 3.更新源
 	sudo apt-get update
 	源保存的文件为：/etc/apt/sources.list
+
+4.查看 ip
+	sudo install net-tools
+	ifconfig
+
+5.安装gedit
+	apt install gedit	
+
+6.防火墙
+	ufw disable
+	ufw enable
+	service ufw stop
 
 ==========================彻底删除nginx================
 

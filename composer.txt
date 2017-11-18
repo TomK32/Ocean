@@ -1,12 +1,9 @@
-﻿
-
-composer
+﻿composer
 	
 	运行安装命令下载 composer.phar 文件 : 			php -r "readfile('https://getcomposer.org/installer');" | php
 	在 composer.phar 同级目录下新建文件 composer.bat:	echo @php "%~dp0composer.phar" %*>composer.bat
 	在当前目录下新建 composer.json 文件
 	解决依赖和下载：					php composer.phar install
-
 
 	Packagist 镜像使用方法
 		
@@ -23,8 +20,6 @@ composer
 	更新忽略php版本的方法：
 		composer update --ignore-platform-reqs
 	
-
-
 依赖管理工具 composer ：
 	中文网站：http://docs.phpcomposer.com/00-intro.html	
 
