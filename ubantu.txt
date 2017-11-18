@@ -95,18 +95,31 @@ sudo apt-get –purge remove libapache2-mod-php5 php5 php5-gd php5-mysql
 		user     = debian-sys-maint
 		password = PBJ3tCzyk8VwpTnO
 
+	修改root密码：
+			use mysql 
+			update mysql.user set authentication_string=password('123qwe') where user='root' and Host ='localhost';
+			update user set plugin="mysql_native_password";
+			flush privileges;
+			quit;
++
+	查看端口号：
+			show global variables like 'port'
+			
+	修改端口号：
+			sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+			修改成功后重启msyql service mysql restart		
 
 3.安装PHP
-
+	
 	sudo apt-get install php7.0
 
 	测试：php7.0 -v
 
 4.安装其他模块
-
+	
 	sudo apt-get install libapache2-mod-php7.0
 	sudo apt-get install php7.0-mysql
-
+	
 	重启服务
 	service apache2 restart
 	service mysql restart
