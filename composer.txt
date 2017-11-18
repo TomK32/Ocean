@@ -1,46 +1,46 @@
-
+ï»¿
 
 composer
 	
-	ÔËĞĞ°²×°ÃüÁîÏÂÔØ composer.phar ÎÄ¼ş : 			php -r "readfile('https://getcomposer.org/installer');" | php
-	ÔÚ composer.phar Í¬¼¶Ä¿Â¼ÏÂĞÂ½¨ÎÄ¼ş composer.bat:	echo @php "%~dp0composer.phar" %*>composer.bat
-	ÔÚµ±Ç°Ä¿Â¼ÏÂĞÂ½¨ composer.json ÎÄ¼ş
-	½â¾öÒÀÀµºÍÏÂÔØ£º					php composer.phar install
+	è¿è¡Œå®‰è£…å‘½ä»¤ä¸‹è½½ composer.phar æ–‡ä»¶ : 			php -r "readfile('https://getcomposer.org/installer');" | php
+	åœ¨ composer.phar åŒçº§ç›®å½•ä¸‹æ–°å»ºæ–‡ä»¶ composer.bat:	echo @php "%~dp0composer.phar" %*>composer.bat
+	åœ¨å½“å‰ç›®å½•ä¸‹æ–°å»º composer.json æ–‡ä»¶
+	è§£å†³ä¾èµ–å’Œä¸‹è½½ï¼š					php composer.phar install
 
 
-	Packagist ¾µÏñÊ¹ÓÃ·½·¨
+	Packagist é•œåƒä½¿ç”¨æ–¹æ³•
 		
-		·½·¨Ò»£º ĞŞ¸Ä composer µÄÈ«¾ÖÅäÖÃÎÄ¼ş£¨ÍÆ¼ö·½Ê½£© :
+		æ–¹æ³•ä¸€ï¼š ä¿®æ”¹ composer çš„å…¨å±€é…ç½®æ–‡ä»¶ï¼ˆæ¨èæ–¹å¼ï¼‰ :
 			composer config -g repo.packagist composer https://packagist.phpcomposer.com
 			
 		
-		·½·¨¶ş£º ĞŞ¸Äµ±Ç°ÏîÄ¿µÄ composer.json ÅäÖÃÎÄ¼ş,ÔÚcomposer.json ÎÄ¼şËùÔÚÄ¿Â¼£¬Ö´ĞĞÈçÏÂÃüÁî£º
+		æ–¹æ³•äºŒï¼š ä¿®æ”¹å½“å‰é¡¹ç›®çš„ composer.json é…ç½®æ–‡ä»¶,åœ¨composer.json æ–‡ä»¶æ‰€åœ¨ç›®å½•ï¼Œæ‰§è¡Œå¦‚ä¸‹å‘½ä»¤ï¼š
 			composer config repo.packagist composer https://packagist.phpcomposer.com
 
-	°æ±¾¸üĞÂ£º
-		¾­³£Ö´ĞĞ composer selfupdate ÒÔ±£³Ö Composer Ò»Ö±ÊÇ×îĞÂ°æ±¾
+	ç‰ˆæœ¬æ›´æ–°ï¼š
+		ç»å¸¸æ‰§è¡Œ composer selfupdate ä»¥ä¿æŒ Composer ä¸€ç›´æ˜¯æœ€æ–°ç‰ˆæœ¬
 	
-	¸üĞÂºöÂÔphp°æ±¾µÄ·½·¨£º
+	æ›´æ–°å¿½ç•¥phpç‰ˆæœ¬çš„æ–¹æ³•ï¼š
 		composer update --ignore-platform-reqs
 	
 
 
-ÒÀÀµ¹ÜÀí¹¤¾ß composer £º
-	ÖĞÎÄÍøÕ¾£ºhttp://docs.phpcomposer.com/00-intro.html	
+ä¾èµ–ç®¡ç†å·¥å…· composer ï¼š
+	ä¸­æ–‡ç½‘ç«™ï¼šhttp://docs.phpcomposer.com/00-intro.html	
 
-±äÁ¿Õ¹Ê¾Àà  symfony/var-dumper £º
-	gitµØÖ·£º 	https://github.com/symfony/var-dumper
+å˜é‡å±•ç¤ºç±»  symfony/var-dumper ï¼š
+	gitåœ°å€ï¼š 	https://github.com/symfony/var-dumper
 
-´íÎóÊä³öÀà filp/whoops £º
-	gitµØÖ·£º 	https://github.com/filp/whoops
+é”™è¯¯è¾“å‡ºç±» filp/whoops ï¼š
+	gitåœ°å€ï¼š 	https://github.com/filp/whoops
 
-Êı¾İ¿â¿ò¼Ü Medoo£ºcatfan/Medoo
-	gitµØÖ· £º	https://github.com/catfan/Medoo
-	¹ÙÍøµØÖ·£º	http://medoo.lvtao.net/
+æ•°æ®åº“æ¡†æ¶ Medooï¼šcatfan/Medoo
+	gitåœ°å€ ï¼š	https://github.com/catfan/Medoo
+	å®˜ç½‘åœ°å€ï¼š	http://medoo.lvtao.net/
 
-Ä£°åÒıÇæ twig£º
-	gitµØÖ·:	https://github.com/twigphp/Twig
-	¹ÙÍøµØÖ·£º	https://twig.symfony.com/
+æ¨¡æ¿å¼•æ“ twigï¼š
+	gitåœ°å€:	https://github.com/twigphp/Twig
+	å®˜ç½‘åœ°å€ï¼š	https://twig.symfony.com/
 
-js ¿ò¼Ü angularjs 1x£º
-	ÓÃ angularjs 1  »òÕß angularjs 2
+js æ¡†æ¶ angularjs 1xï¼š
+	ç”¨ angularjs 1  æˆ–è€… angularjs 2
