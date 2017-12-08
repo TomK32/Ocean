@@ -1,0 +1,4 @@
+
+
+crontab:
+	*/1 * * * * /var/www/html/queue/good.sh >> /var/www/html/queue/logs 2>&1
