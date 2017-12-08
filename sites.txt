@@ -1,3 +1,10 @@
 ﻿
 ubuntu 镜像地址：
 	http://mirrors.melbourne.co.uk
+
+Windows 资源（镜像）地址：
+	https://msdn.itellyou.cn/
+
+
+docker镜像：
+	https://hub.docker.com/

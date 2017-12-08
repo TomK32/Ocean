@@ -1,17 +1,17 @@
 
 
-一. htaccess 的基本作用
-    .htaccess 是一个纯文本文件，它里面存放着 Apache 服务器配置相关的指令
-    .htaccess 主要的作用有: url重写/自定义错误页面/MIME类型匹配及访问权限控制等。主要体现在伪静态的应用/图片防盗链/自定义404错误页面/阻止和允许特定ip和IP段/目录浏览和主页/禁止访问指定文件类型/文件密码保护等
-    .htaccess
+
+.htaccess 主要的作用有:
+    url重写/自定义错误页面/MIME类型匹配及访问权限控制等。主要体现在伪静态的应用/图片防盗链/自定义404错误页面/阻止和允许特定ip和IP段/目录浏览和主页/禁止访问指定文件类型/文件密码保护等
+
 
 二、启用.htaccess的配置
 
     启用.htaccess，需要修改httpd.conf，启用AllowOverride:
 
         <Directory />
-        Options FollowSymLinks
-        AllowOverride None              # 这里改为 AllowOverride All
+            Options FollowSymLinks
+            AllowOverride None              # 这里改为 AllowOverride All
         </Directory>
 
 
@@ -169,6 +169,41 @@
         <FilesMatch “.(pl|php|cgi|spl|scgi|fcgi)$”>
             Header unset Cache-Control
         </FilesMatch>
+
+
+
+=====================例子：
+    一 防盗链功能
+        RewriteEngine On
+        RewriteCond %{HTTP_REFERER} !^http://(.+.)?mysite.com/ [NC]
+        RewriteCond %{HTTP_REFERER} !^$
+        RewriteRule .*.(jpe?g|gif|bmp|png)$ /images/nohotlink.jpg [L]
+
+    二 网址规范华
+        这个是把所有二级域名都重定向到  www.yourdomain.com 的例子，现在看起来是不是很简单了？
+        Options +FollowSymLinks
+        rewriteEngine on
+        rewriteCond %{http_host} ^yourdomain.com [NC]
+        rewriteRule ^(.*)$ http://www.yourdomain.com/$1 [R=301,L]
+
+    三 临时错误页面
+        当你的网站在升级/修改的时候，最好让访客转到指定的页面，而不是没做完的页面或者错误页面
+        RewriteEngine on
+        RewriteCond %{REQUEST_URI} !/maintenance.html$
+        RewriteCond %{REMOTE_ADDR} !^123.123.123.123
+        RewriteRule $ /error.html [R=302,L]
+
+    四 重定向 RSS 地址到 FeedSky
+        出了可以更改模板里的RSS地址外，.htaccess也能实现RSS地址的更改，并更加方便
+        RewriteEngine on
+        RewriteCond %{HTTP_USER_AGENT} !FeedSky [NC]
+        RewriteCond %{HTTP_USER_AGENT} !FeedValidator [NC]
+        RewriteRule ^feed/?([_0-9a-z-]+)?/?$ http://feed.feedsky.com/yours
+
+
+
+
+
 
 
 

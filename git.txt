@@ -1,11 +1,27 @@
 ﻿
 
-创建分支：		git branch dev-1.0
-创建分支并进入：	git checkout -b dev-1.0
-切换分支：		git checkout master
-显示当前分支：		git branch
-删除分支：		git branch -d dev-1.0
+====================git 克隆分支到本地 =====================
+1 配置对应信息
+    git config --global user.name   'lgl'
+    git config --global user.email  '13653668463@163.com'
 
+2 进入项目目录
+
+3 克隆远程项目
+    git clone https://github.com/hongtaok/frame.git
+
+4 查看远程项目的分支
+    git branch -r
+
+5 建立本地分支
+    git checkout -b 本地分支名 远程分支名
+    如： git checkout -b dev-base origin/dev-base
+
+创建分支：			git branch dev-1.0
+创建分支并进入：	git checkout -b dev-1.0
+切换分支：			git checkout master
+显示当前分支：		git branch
+删除分支：			git branch -d dev-1.0
 
 合并分支到master：	
 			git checkout master
@@ -23,17 +39,14 @@
 查看git记录合并：
 			git log --graph --pretty=oneline --abbrev-commit
 
-
 推送分支到github：	
 			git checkout dev-1.0
 			git push -u origin dev-1.0
-
 
 ===========================================
 
 克隆分支到本地：
 			git checkout -b dev origin/dev-1.0
-
 
 更新：
 			git checkout dev-1.0
@@ -43,17 +56,16 @@
 本地tag管理
 			git tag -a v1.0 -m '1.0版本'
 			
-查看标签： 	git tag
+查看标签： 		git tag
 查看标签信息：	git show v1.0
-删除标签：	git tag -d v1.0
+删除标签：		git tag -d v1.0
 
 把标签推送到远程：git push origin v1.0  或  git push origin --tags
+
 
 删除远程标签：	
 	git tag -d v1.0
 	git push origin :refs/tags/v.10
-
-
 
 git clone git@server:/srv/sample.git
 Cloning into 'sample'...
@@ -66,13 +78,10 @@ warning:You appear to have cloned an empty repository
 
 本地仓库实际上和远程仓库没什么不同，只是自己搭建一台git服务器作为私有仓库使用
 
-第一步，安装git：
 
-	$ sudo apt-get install git
 
-第二步，创建一个git用户，用来运行git服务：
-
-	$ sudo adduser git
+sudo apt-get install git 	# 第一步，安装git：
+sudo adduser git 			# 第二步，创建一个git用户，用来运行git服务
 
 第三步，创建证书登录：
 

@@ -1,15 +1,14 @@
 ﻿composer
 	
-	运行安装命令下载 composer.phar 文件 : 			php -r "readfile('https://getcomposer.org/installer');" | php
+	运行安装命令下载 composer.phar 文件 : 				php -r "readfile('https://getcomposer.org/installer');" | php
 	在 composer.phar 同级目录下新建文件 composer.bat:	echo @php "%~dp0composer.phar" %*>composer.bat
 	在当前目录下新建 composer.json 文件
-	解决依赖和下载：					php composer.phar install
+	解决依赖和下载：									php composer.phar install
 
 	Packagist 镜像使用方法
 		
 		方法一： 修改 composer 的全局配置文件（推荐方式） :
 			composer config -g repo.packagist composer https://packagist.phpcomposer.com
-			
 		
 		方法二： 修改当前项目的 composer.json 配置文件,在composer.json 文件所在目录，执行如下命令：
 			composer config repo.packagist composer https://packagist.phpcomposer.com
@@ -19,23 +18,9 @@
 	
 	更新忽略php版本的方法：
 		composer update --ignore-platform-reqs
-	
+		
+
+
 依赖管理工具 composer ：
 	中文网站：http://docs.phpcomposer.com/00-intro.html	
 
-变量展示类  symfony/var-dumper ：
-	git地址： 	https://github.com/symfony/var-dumper
-
-错误输出类 filp/whoops ：
-	git地址： 	https://github.com/filp/whoops
-
-数据库框架 Medoo：catfan/Medoo
-	git地址 ：	https://github.com/catfan/Medoo
-	官网地址：	http://medoo.lvtao.net/
-
-模板引擎 twig：
-	git地址:	https://github.com/twigphp/Twig
-	官网地址：	https://twig.symfony.com/
-
-js 框架 angularjs 1x：
-	用 angularjs 1  或者 angularjs 2

@@ -1,0 +1,26 @@
+
+
+apt-cache search beanstalkd     # 查看软件库中是否存在 beanstalkd
+apt-get install beanstalkd      # 安装
+beanstalkd -h                   # 查看命令参数
+beanstalkd -l 127.0.0.1 -p 11300    # 启动
+
+ps aux | grep bean
+/etc/init.d/beanstalkd status   # 查看
+
+apt install composer
+
+
+========================= add-apt-repository:command not found 问题 =================
+
+sudo apt-get install python-software-properties
+sudo apt-get update
+
+sudo apt install software-properties-common
+sudo apt-get update
+
+sudo add-apt-repository ppa:webupd8team/sublime-text-3      #添加sublime text 3的仓库
+sudo apt-get update                                         #更新软件库
+sudo apt-get install sublime-text-installer                 #安装Sublime Text 3
+subl                                                        # 启动
+sudo apt-get remove sublime-text-installer                  # 卸载
