@@ -12,6 +12,19 @@ ifconfig					查看ip
 apt install gedit			gedit	
 ufw disable/enable 			防火墙开启/关闭
 
+sudo apt-get install openssh-server   # 安装ssh
+sudo /etc/init.d/ssh start            # 启动ssh
+
+apt autoremove                     # 删除为了满足其他软件包的依赖而安装的，系统会自动卸载这些不再需要的软件包
+apt remove [+软件包名称]             # 删除软件包（保留配置文件）
+apt --purge remove [+软件包名称]     # 删除软件包，同时删除配置文件
+
+=================== 卸载mysql5.7 ==================
+
+dpkg --list | grep mysql            # 查看依赖
+sudo apt remove msyql-****          # 卸载
+sudo apt autoremove --purge mysql-***** #
+
 ==========================彻底删除nginx================
 
 sudo apt-get --purge remove nginx 		删除nginx，–purge包括配置文件
@@ -129,7 +142,7 @@ vim /etc/mysql/mysql.conf.d/mysqld.cnf
 
 mysql -u root -p
 
-grant all *.* to root@'%' identified by 'root';
+grant all on *.* to root@'%' identified by 'root';
 flush privileges;	
 
 
