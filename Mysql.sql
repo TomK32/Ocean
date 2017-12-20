@@ -513,10 +513,7 @@ innodb_flush_log_at_trx = 1  -- 每次 commit 时都写入磁盘。这样理论�
 innodb_flush_log_at_trx = 2  -- 每次 commit 时，写日志只缓冲（buffer）到操作系统缓存，但不刷新到磁盘，innodb会每秒刷新一次日志，所以宕机丢失的是最                                近1秒的事务。生产环境中建议使用此配置
 innodb_flush_log_at_trx = 3  -- 每秒把日志缓冲区的内容写到日志文件，并且刷新到磁盘，但 commit 什么也不做
 
-
 show session status like 'Select%';
-
-
 
 CHANGE MASTER TO
 MASTER_HOST='192.168.127.130',
@@ -530,28 +527,652 @@ MASTER_LOG_POS= 706;
 change master to master_host='192.168.127.130',master_user='repl',master_password='root',master_log_file='mysql-bin.000004',master_log_pos=154;
 
 
+============================== 导入官方示例库 ========================================
+
+wget https://launchpad.net/test-db/employees-db-1/1.0.6/+download/employees_db-full-1.0.6.tar.bz2
+
+tar -xjf employees_db-full-1.0.6.tar.bz2
+
+cd employees_db
+
+vim employees.sql
+    把 storage_engine 改为 default_storage_engine
+
+mysql -t < employees.sql -uroot -proot
+
+
+========================== mysql 技术内幕 innodb 存储引擎 ==============================
+
+drop table if exists t;
+
+create table t(
+   a int unsigned not null auto_increment,
+   b char(10),
+   primary key(a)
+)engine=innodb charset=utf8;
+
+delimiter //
+create procedure load_t(count int unsigned)
+  BEGIN
+     SET @c = 0;
+     WHILE @c < count DO
+      INSERT INTO t SELECT NULL,REPEAT(CHAR(97+RAND() * 26),10);
+      SET @c = @c + 1;
+     END WHILE;
+  END;
+  //
+DELIMITER ;
+
+CLASS load_t(100);
+
+select a,b from limit 10;
+
+-------------
+
+select @@version\G;
+show variables like'innodb_version'\G;
+show variables like'innodb_file_format'\G;
+
+--------------
+
+CREATE TABLE u(
+  id INT,
+  name VARCHAR(20),
+  id_card CHAR(18),
+  PRIMARY KEY(id),
+  UNIQUE KEY(name)
+);
+
+SELECT constraint_name,constraint_type FROM information_schema.TABLE_CONSTRAINTS WHERE table_schema='test' AND table_name='u';\G;
+
+ALTER TABLE u ADD UNIQUE KEY uk_id_card(id_card);
+
+CREATE TABLE p(
+  id INT,
+  u_id INT,
+  PRIMARY KEY(id),
+  FOREIGN KEY(u_id) REFERENCES p(id)
+);
+
+SELECT constraint_name,constraint_type FROM information_schema.TABLE_CONSTRAINTS WHERE table_schema='test' AND table_name='p';\G;
+
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE constraint_schema='test'\G;
+
+
+-------------
+
+CREATE TABLE a(
+  id INT NOT NULL,
+  date DATE NOT NULL
+);
+
+INSERT INTO a SELECT NULL,'2009-02-30';
+
+SHOW VARIABLES LIKE'sql_mode';
+
+----------------
+
+
+CREATE TABLE a(
+  id INT,
+  sex ENUM('male','female')
+);
+
+INSERT INTO a SELECT 1,'female';
+INSERT INTO a SELECT 2,'bi';
+
+--------------- 触发器 -----------------
+
+CREATE
+[DEFINER={user|CURRENT_USER}]
+TRIGGER trigger_name BEFORE|AFTER INSERT|UPDATE|DELETE
+ON tbl_name FOR EACH ROW trigger_stmt
+
+CREATE TABLE usercash(
+  userid INT NOT NULL,
+  cash INT UNSIGNED NOT NULL
+);
+
+INSERT INTO usercash SELECT 1,1000;
+
+UPDATE usercash SET cash=cash-(-20) WHERE userid=1;
+
+CREATE TABLE usercash_err_log(
+  userid INT NOT NULL,
+  old_cash INT UNSIGNED NOT NULL,
+  new_cash INT UNSIGNED NOT NULL,
+  user VARCHAR(30),
+  time DATETIME
+);
+
+DELIMITER //
+CREATE TRIGGER tgr_usercash_update BEFORE UPDATE ON usercash
+FOR EACH ROW
+  BEGIN
+      IF new.cash - old.cash > 0 THEN
+      INSERT INTO usercash_err_log
+      SELECT old.userid,old.cash,new.cash,USER(),NOW();
+      SET new.cash = old.cash;
+    END IF;
+  END;
+//
+DELIMITER ;
+
+DELETE FROM usercash;
+INSERT INTO usercash SELECT 1,1000;
+UPDATE usercash SET cash=cash - (-20) WHERE userid=1;
+SELECT * FROM usercash\G;
+
+
+-------------------- 外键约束
+
+[CONSTRAINT[symbol]] FOREIGN KEY
+[index_name](index_col_name,...)
+REFERENCES tbl_name(index_col_name,...)
+[ON DELETE reference_option]
+[ON UPDATE reference_option]
+reference_option:
+RESTRICT|CASCADE|SET NULL|NO ACTION
+
+/*
+CASCADE 当父表发生 delete 或 update 时，子表数据进行相应的操作
+SET NULL 父表发生 update 或 delete 时，子表数据更新为null值
+NO ACTION 父表发生 update 或 delete 时，抛出错误，不允许这类操作发生
+RESTRICT 父表发生 update 或 delete 时，抛出错误，不允许这类操作发生
+*/
+
+CREATE TABLE parent(
+  id INT NOT NULL,
+  PRIMARY KEY(id)
+)ENGINE=INNODB;
+
+CREATE TABLE child(
+  id INT,
+  parent_id INT,
+  FOREIGN KEY(parent_id) REFERENCES parent(id)
+)ENGINE=INNODB;
+
+/*导入数据时忽略外键检查*/
+
+SET foreign_key_checks = 0;
+LOAD DATA......
+SET foreign_key_checks = 1;
+
+
+------------------- 视图
+
+CREATE
+[OR REPLACE]
+[ALGORITHM={UNDEFINED|MERGE|TEMPTABLE}]
+[DEFINER={user|CURRENT_USER}]
+[SQL SECURITY{DEFINER|INVOKER}]
+VIEW view_name[(column_list)]
+AS select_statement
+[WITH[CASCADED|LOCAL]CHECK OPTION]
+
+CREATE TABLE t(
+  id INT
+);
+
+CREATE VIEW v_t AS SELECT * FROM t WHERE id < 10;
+
+INSERT INTO v_t SELECT 20;
+
+SELECT * FROM v_t;
+
+ALTER TABLE v_t AS SELECT * FROM t WHERE id < 10 WITH CHECK OPTION;
+
+INSERT INTO v_t SELECT 20;
+
+SELECT * FROM information_schema.TABLES WHERE table_type='BASE TABLE' AND table_schema=database() \G;
+
+
+--------------- 物化视图
+
+
+CREATE TABLE orders
+(
+  order_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  product_name VARCHAR(30) NOT NULL,
+  price DECIMAL(8,2) NOT NULL,
+  amount SMALLINT NOT NULL,
+  PRIMARY KEY(order_id)
+)ENGINE=InnoDB;
+
+INSERT INTO orders VALUES
+(NULL,'CPU',100.2,1),
+(NULL,'Memory',101.2,3),
+(NULL,'CPU',102.2,3),
+(NULL,'CPU',103.2,1);
+
+SELECT * FROM orders \G;
+
+CREATE TABLE orders_mv(
+  product_name VARCHAR(30) NOT NULL,
+  price_sum DECIMAL(8,2) NOT NULL,
+  amount_sum INT NOT NULL,
+  price_avg FLOAT NOT NULL,
+  orders_cnt INT NOT NULL,
+  UNIQUE INDEX(product_name)
+);
+
+INSERT INTO orders_mv SELECT product_name,SUM(price),SUM(amount),AVG(price),COUNT(*) FROM orders GROUP BY product_name;
+
+SELECT * FROM orders_mv \G;
+
+------------------------ 分区表
+
+SHOW PLUGINS\G;
+
+/*
+  水平分区：指将同一表中不同行得记录分配到不同的物理文件中
+  垂直分区：指将同一表中不同列得记录分配到不通的物理文件中
+
+  RANGE 行数据基于属于一个给定连续区间的列值被放入分区。mysql 5.5 开始支持 RANGE COLUMNS的分区
+  LIST  和RANGE 分区类似，只是LIST分区面向的是离散的值。 mysql 5.5 开始支持 LIST COLUMNS 的分区
+  HASH  根据用户自定义的表达式的返回值来进行分区，返回值不能为负数
+  KEY   根据mysql数据库提供的哈希函数来进行分区
+*/
+
+/*不论创建何种类型的分区，如果表中存在主键或者唯一索引时，分区列必须是唯一索引的一个组成部分，因此下面创建分区的sql语句会产生错误*/
+CREATE TABLE t1(
+ a int,
+ b date,
+ c int,
+ d INT,
+ unique key(a,b)
+)
+partition by hash(c)
+partitions 4;
+
+/*唯一索引是允许null值得，并且分区列只要是唯一索引得一个组成部分，不需要整个唯一索引列都是分区，如：*/
+CREATE TABLE t1(
+ a int,
+ b date,
+ c int,
+ d INT,
+ unique key(a,b,c,d)
+)
+partition by hash(c)
+partitions 4;
+
+-- 如果建表时没有指定主键，唯一索引，可以指定任何一个列为分区列
+CREATE TABLE t1(
+ a int,
+ b date,
+ c int,
+ d INT
+)
+partition by hash(c)
+partitions 4;
+
+CREATE TABLE t1(
+ a int,
+ b date,
+ c int,
+ d INT,
+ key(d)
+)
+partition by hash(c)
+partitions 4;
+
+
+-------------------- range 分区
+
+CREATE TABLE t(id INT)ENGINE=INNODB
+PARTITION BY RANGE(id)(
+  PARTITION p0 VALUES LESS THAN(10),
+  PARTITION p1 VALUES LESS THAN(20)
+);
+
+-- 查看表在磁盘上的物理文件，启用分区之后，表不再由一个idb文件组成了，而是由建立分区时的各个分区idb文件组成，如 t#P#p0.idb,t#P#p1.idbqq
+system ls -lh /var/lib/mysql/test/t*;
+
+INSERT INTO t SELECT 9;
+INSERT INTO t SELECT 10;
+INSERT INTO t SELECT 15;
+
+SELECT * FROM information_schema.PARTITIONS WHERE table_schema=database() AND table_name='t'\G;
+
+ALTER TABLE t ADD PARTITION(
+  PARTITION p2 VALUES LESS THAN MAXVALUE
+);
+
+-- RANGE 分区主要用于日期列的分区，例如对于销售类的表，可以根据年来分区存放销售记录，如下面的分区表 sales
+CREATE TABLE sales(
+  money INT UNSIGNED NOT NULL,
+  date DATETIME
+)ENGINE=INNODB
+PARTITION BY RANGE(YEAR(date))(
+  PARTITION p2015 VALUES LESS THAN(2016),
+  PARTITION p2016 VALUES LESS THAN(2017),
+  PARTITION p2017 VALUES LESS THAN(2018)
+);
+
+INSERT INTO sales SELECT 100,'2015-01-01';
+INSERT INTO sales SELECT 100,'2015-02-01';
+INSERT INTO sales SELECT 100,'2016-01-01';
+INSERT INTO sales SELECT 100,'2016-02-01';
+INSERT INTO sales SELECT 100,'2017-01-01';
+INSERT INTO sales SELECT 100,'2017-02-01';
+
+-- 查询2017整年的销售额  （SQL 语句只会去搜索p2017这个分区）
+EXPLAIN PARTITIONS
+SELECT * FROM sales WHERE date>='2017-01-01' AND date<='2018-12-31'\G;
+
+-- 下面这条sql 会搜索 2016 和 2017 两个分区
+EXPLAIN PARTITIONS
+SELECT * FROM sales WHERE date>='2016-01-01' AND date<='2017-12-31'\G;
+
+-- 删除2017年的数据
+ALTER TABLE sales DROP PARTITION p2015;
+
+
+CREATE TABLE sales1(
+  money INT UNSIGNED NOT NULL,
+  date DATETIME
+)ENGINE=INNODB
+PARTITION BY RANGE(YEAR(date) * 100 + MONTH(date))(
+  PARTITION p2010001 VALUES LESS THAN(2010002),
+  PARTITION p2010002 VALUES LESS THAN(2010003),
+  PARTITION p2010003 VALUES LESS THAN(2010004)
+);
+
+-- 下面这条sql对 所有分区都进行了搜索
+EXPLAIN PARTITIONS
+SELECT * FROM sales1 WHERE date>='2010-01-01' AND date<='2010-01-31'\G;
+
+-- 对于range分区的查询，优化器只能对 YEAR() TO_DAYS(),TO_SECONDS(),UNIX_TIMESTAMP() 这类函数进行优化选择
+CREATE TABLE sales1(
+  money INT UNSIGNED NOT NULL,
+  date DATETIME
+)ENGINE=INNODB
+PARTITION BY RANGE(TO_DAYS(date))(
+  PARTITION P2010001 VALUES LESS THAN(TO_DAYS('2010-02-01')),
+  PARTITION P2010002 VALUES LESS THAN(TO_DAYS('2010-03-01')),
+  PARTITION P2010003 VALUES LESS THAN(TO_DAYS('2010-04-01'))
+);
+
+EXPLAIN PARTITIONS
+SELECT * FROM sales WHERE date>='2010-01-01' AND date<='2010-01-31'\G;
 
 
 
+------------------------------- LIST 分区 ---------------------------------------
+
+-- list 分区和range分区非常相似，只是分区列的值是离散的，而非连续的
+
+CREATE TABLE t(
+  a INT,
+  b INT
+)ENGINE=INNODB
+PARTITION BY LIST(b)(
+  PARTITION P0 VALUES IN(1,3,5,7,9),
+  PARTITION P1 VALUES IN(2,4,6,8,10)
+);
+
+-- 不同于range分区定义的values less than 语句 ，list 分区使用 values in。因为每个分区的值是离散的，因此只能定义值
+
+INSERT INTO t SELECT 1,1;
+INSERT INTO t SELECT 1,2;
+INSERT INTO t SELECT 1,3;
+INSERT INTO t SELECT 1,4;
+INSERT INTO t SELECT 1,5;
+INSERT INTO t SELECT 1,6;
+INSERT INTO t SELECT 1,7;
+INSERT INTO t SELECT 1,8;
+INSERT INTO t SELECT 1,9;
+INSERT INTO t SELECT 1,10;
+
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_name='t' AND table_schema=DATABASE() \G;
+
+-- 如果插入的值不再分区的定义中，会抛出异常
+INSERT INTO t SELECT 1,11;
+
+
+------------------------------------------- HASH 分区 ---------------------------------------------------
+
+-- hash 分区的目的是将数据均匀的分不到预先定义的各个分区中。在 range 和 list分区中，必须明确指定一个给定的列值或列值集合应该保存到那个分区中；而在hash分区中，mysql自动完成这些工作。用户所要做的只是基于将要进行哈希分区的列值指定一个列值或表达式，以及指定分区的表将要被分割成的分区数量
+
+CREATE TABLE t_hash(
+  a INT,
+  b DATETIME
+)ENGINE=INNODB
+PARTITION BY HASH(YEAR(b))
+PARTITIONS 4;
+
+INSERT INTO t_hash SELECT 1,'2010-04-01';
+
+-- 可以看到 p2 分区有一条记录 。如果对于连续的值进行hash分区，如自增长的主键，则可以较好的将数据进行平均分布
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_schema=DATABASE() AND table_name='t_hash'\G;
+
+-- LINEAR HASH 分区
+-- linear hash 分区的有点在于，增加，删除，合并和拆分分区将变得更加快捷，这有利于处理含有大量数据的表。它的缺点在于，于使用hash分区得到的数据分布相比，各个分区间数据的分布可能不大均匀
+
+CREATE TABLE t_linear_hash(
+  a INT,
+  b DATETIME
+)ENGINE=INNODB
+PARTITION BY LINEAR HASH(YEAR(b))
+PARTITIONS 4;
+
+INSERT INTO t_linear_hash SELECT 1,'2010-04-01';
+
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_schema=DATABASE() AND table_name='t_linear_hash'\G;
 
 
 
+------------------------------------------- key 分区 ---------------------------------------------------
+
+-- key分区和hash分区相似，不同之处在于hash分区使用用户定义的函数进行分区，key分区使用mysql数据库提供的函数进行分区。对于NDB Cluster 引擎，msyql数据库使用md5函数来分区；对于其他存储引擎，mysql数据库使用其内部的哈希函数，这些函数基于与 PASSWORD() 一样的算法
+
+CREATE TABLE t_key(
+  a INT,
+  b DATETIME
+)ENGINE=INNODB
+PARTITION BY KEY(b)
+PARTITIONS 4;
+
+------------------------------------------- COLUMNS 分区 ---------------------------------------------------
+
+-- RANGE,LIST,HASH,KEY 中分区条件是：数据必须是整型，如果不是整型，需要通过函数将其转化为整型，如 year() to_days() month() 等。mysql5.5开始支持COLUMNS分区，可视为range分区和list分区的一种进化。columns分区可以直接使用非整型的数据进行分区，分区根据类型直接比较而得，不需要转化为整型。此外，rangecolumns 分区可以对多个列得值进行分区
+
+-- 所有的整型类型，如 INT SMALLINT TINYINT BIGINT    (FLOAT DECIMAL 不支持)
+-- 日期类型，如 DATE DATETIME                       (其余的日期类型不予支持)
+-- 字符串类型，如 CHAR VARCHAR BINARY VARBINARY      (BLOB TEXT 类型不予支持)
+-- 对于日期类型的分区，我们不需要YEAR() TO_DAYS() 函数了，而直接可以使用 COLUMNS
+
+CREATE TABLE t_columns_range(
+  a INT,
+  b DATETIME
+)ENGINE=INNODB
+PARTITION BY RANGE COLUMNS(b)(
+  PARTITION P0 VALUES LESS THAN('2009-01-01'),
+  PARTITION P1 VALUES LESS THAN('2010-01-01')
+);
+
+-- 可以直接使用字符串的分区
+CREATE TABLE customers_1(
+  first_name VARCHAR(25),
+  last_name VARCHAR(25),
+  street_1 VARCHAR(30),
+  street_2 VARCHAR(30),
+  city VARCHAR(15),
+  renewal DATE
+)
+PARTITION BY LIST COLUMNS(city)(
+  PARTITION P0 VALUES IN('bj','sh','gz'),
+  PARTITION P1 VALUES IN('tj','xa','cq'),
+  PARTITION P2 VALUES IN('ty','cz','lf')
+);
+
+--  使用多个列进行分区
+CREATE TABLE rcx(
+  a int,
+  b int,
+  c char(3),
+  d int
+)Engine=InnoDB
+PARTITION BY RANGE COLUMNS(a,d,c)(
+  PARTITION P0 VALUES LESS THAN(5,10,'aaa'),
+  PARTITION P1 VALUES LESS THAN(5,10,'bbb'),
+  PARTITION P2 VALUES LESS THAN(5,10,'ccc'),
+  PARTITION P3 VALUES LESS THAN(5,10,'ddd'),
+  PARTITION P4 VALUES LESS THAN(MAXVALUE,MAXVALUE,MAXVALUE)
+);
+
+-- MYSQL5.5 开始支持columns分区，对于之前range和list分区，用户可以用range columns和list columns分区进行很好的代替
+
+------------------------------------------- 子分区 ---------------------------------------------------
+
+CREATE TABLE ts(a INT,b DATE)ENGINE=INNODB
+PARTITION BY RANGE(YEAR(b))
+SUBPARTITION BY HASH(TO_DAYS(b))
+SUBPARTITIONS 2(
+  PARTITION P0 VALUES LESS THAN(1990),
+  PARTITION P1 VALUES LESS THAN(2000),
+  PARTITION P2 VALUES LESS THAN MAXVALUE
+);
+
+system ls -lh /var/lib/mysql/test/ts*;
+
+CREATE TABLE ts(a INT, b DATE)
+PARTITION BY RANGE(YEAR(b))
+SUBPARTITION BY HASH(TO_DAYS(b))(
+  PARTITION P0 VALUES LESS THAN(1990)(
+    SUBPARTITION S0,
+    SUBPARTITION S1
+  ),
+  PARTITION P1 VALUES LESS THAN(2000)(
+    SUBPARTITION S2,
+    SUBPARTITION S3
+  ),
+  PARTITION P2 VALUES LESS THAN MAXVALUE(
+    SUBPARTITION S4,
+    SUBPARTITION S5
+  )
+);
+
+-- 子分区可以用于特别大的表，在多个磁盘间分别分配数据和索引。假设有6个磁盘，分别为 /disk0,/disk1,/disk2 等
+CREATE TABLE ts(a INT,b DATE)ENGINE=INNODB
+PARTITION BY RANGE(YEAR(b))
+SUBPARTITION BY HASH(TO_DAYS(b))(
+  PARTITION P0 VALUES LESS THAN(2000)(
+    SUBPARTITION S0
+    DATA DIRECTORY='/disk0/data'
+    INDEX DIRECTORY='/disk0/idx',
+    SUBPARTITION S1
+    DATA DIRECTORY='/disk1/data'
+    INDEX DIRECTORY='/disk1/idx'
+  ),
+  PARTITION P1 VALUES LESS THAN(2010)(
+    SUBPARTITION S2
+    DATA DIRECTORY='/disk2/data'
+    INDEX DIRECTORY='/disk2/idx',
+    SUBPARTITION S3
+    DATA DIRECTORY='/disk3/data'
+    INDEX DIRECTORY='/disk3/idx'
+  ),
+  PARTITION P2 VALUES LESS THAN MAXVALUE(
+    SUBPARTITION S4
+    DATA DIRECTORY='/disk4/data'
+    INDEX DIRECTORY='/disk4/idx',
+    SUBPARTITION S5
+    DATA DIRECTORY='/disk5/data'
+    INDEX DIRECTORY='/disk5/idx'
+  )
+);
 
 
+------------------------------------------- 分区中的NULL值 ---------------------------------------------------
+
+CREATE TABLE t_range(
+  a INT,
+  b INT
+)ENGINE=INNODB
+PARTITION BY RANGE(b)(
+  PARTITION P0 VALUES LESS THAN(10),
+  PARTITION P1 VALUES LESS THAN(20),
+  PARTITION P2 VALUES LESS THAN MAXVALUE
+);
 
 
+INSERT INTO t_range SELECT 1,1;
+INSERT INTO t_range SELECT 1,null;
+
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_schema=DATABASE() AND table_name='t_range'\G;
+
+-- 可以看到两条数据都放入了P0分区，也就是说明了range分区下，NULL 值会放入最左边的分区中。另外需要注意的是，如果删除这个分区，删除的将是小于10的记录，并且还有NULL值的记录，这点非常重要
+
+ALTER TABLE t_range DROP PARTITION P0;
+
+SELECT * FROM t_range;
+
+-- list 分区下要使用null值，必须显示的指出哪个分区中放入null值，否则会报错
+CREATE TABLE t_list(
+  a INT,
+  b INT
+)ENGINE=INNODB
+PARTITION BY LIST(b)(
+  PARTITION P0 VALUES IN(1,3,5,7,9),
+  PARTITION P1 VALUES IN(2,4,6,8)
+);
+
+INSERT INTO t_list SELECT 1,NULL;
+
+-- 若P0分区允许null值，则插入不会报错
+CREATE TABLE t_list(
+  a INT,
+  b INT
+)ENGINE=INNODB
+PARTITION BY LIST(b)(
+  PARTITION P0 VALUES IN(1,3,5,7,9,NULL),
+  PARTITION P1 VALUES IN(2,4,6,8)
+);
+
+INSERT INTO t_list SELECT 1,NULL;
+
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_schema=DATABASE() AND table_name='t_list'\G;
+
+-- hash 和 key 分区对于 NULL 值得处理方式和range list 分区不一样。任何分区函数都会将含有NULL值得记录返回为0
+CREATE TABLE t_hash(
+  a INT,
+  b INT
+)ENGINE=INNODB
+PARTITION BY HASH(b)
+PARTITIONS 4;
+
+INSERT INTO t_hash SELECT 1,0;
+INSERT INTO t_hash SELECT 1,NULL;
+
+SELECT table_name,partition_name,table_rows FROM information_schema.PARTITIONS WHERE table_schema=DATABASE() AND table_name='t_hash'\G;
 
 
+-------------------------------- 表和分区间交换数据 ----------------------------------
 
+  create table e(
+    id int not null,
+    fname varchar(30),
+    lname varchar(30)
+  )
+  partition by range(id)(
+    partition p0 values less than(50),
+    partition p1 values less than(100),
+    partition p2 values less than(150),
+    partition p3 values less than maxvalue
+  );
 
+insert into e values(1669,'jim','smith'),(337,'aaa','bbb'),(16,'ccc','ddd'),(2005,'eee','fff');
 
+create table e2 like e;
 
+alter table e2 remove partitioning;
 
+SELECT PARTITION_NAME,TABLE_ROWS FROM information_schema.partitions where table_name='e';
 
+alter table e exchange partition p0 with table e2;
 
-
-
-
+SELECT PARTITION_NAME,TABLE_ROWS FROM information_schema.partitions where table_name='e';
 
 
 
