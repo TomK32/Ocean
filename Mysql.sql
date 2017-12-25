@@ -1175,6 +1175,178 @@ alter table e exchange partition p0 with table e2;
 SELECT PARTITION_NAME,TABLE_ROWS FROM information_schema.partitions where table_name='e';
 
 
+ALTER TABLE tbl_name
+ADD {INDEX|KEY} [index_name]
+[index_type](index_col_name,...)[index_option]...
+
+ALTER TABLE tbl_name
+DROP PRIMARY KEY
+| DROP {INDEX|KEY} index_name
+
+CREATE [UNIQUE] INDEX index_name
+[index_type]
+ON tbl_name(index_col_name,...)
+DROP INDEX index_name ON tbl_name
+
+ALTER TABLE t ADD KEY idx_b(b(100));
+
+analyze table t1;
+
+-------------------------------- 联合索引 ----------------------
+
+CREATE TABLE buy_log(
+  userid INT UNSIGNED NOT NULL,
+  buy_date DATE
+)ENGINE=INNODB;
+
+INSERT INTO buy_log VALUES(1,'2009-01-01');
+INSERT INTO buy_log VALUES(2,'2009-01-01');
+INSERT INTO buy_log VALUES(3,'2009-01-01');
+INSERT INTO buy_log VALUES(1,'2009-02-01');
+INSERT INTO buy_log VALUES(3,'2009-02-01');
+INSERT INTO buy_log VALUES(1,'2009-03-01');
+INSERT INTO buy_log VALUES(1,'2009-04-01');
+
+ALTER TABLE buy_log ADD KEY(userid);
+ALTER TABLE buy_log ADD KEY(userid,buy_date);
+
+EXPLAIN SELECT * FROM buy_log WHERE userid = 2;
+
+EXPLAIN SELECT * FROM buy_log WHERE userid = 1 ORDER BY buy_date DESC LIMIT 3;
+
+
+---------------------- 逻辑备份 ---------------------
+mysqldump [arguments] > file_name
+msyqldump --all-databases > dump.sql
+mysqldump --databases db1 db2 db3 > dump.sql
+
+--single-transaction  在备份开始之前，先执行 START TRANSACTION命令，以此来获得备份的一致性，当前该参数只对innodb存储引擎有效。当启用该参数进行备份时，确保没有其他任何DDL语句执行，因为一致性读并不能隔离DDL操作。
+
+--lock-tables(-1)
+    -- 在备份中，依次锁住每个架构下的所有表。一般用于myisam引擎，当备份时只能对数据库进行读取操作，不过备份依然可以保证一致性。对于innodb，不需要使用该参数，用 --single-transaction即可。如果既有myisam，又有innodb的表，只能用 --lock-talbes。
+
+--lock-all-tables(-x)
+    -- 在备份过程中，对所有架构中的所有表上锁。这个可以避免--lock-tables参数不能同时锁住所有表的问题
+
+--add-drop-database
+    -- 在CREATE DATABASE 前先运行 DROP DATABASE。这个参数需要和 --all-databases 或者 --databases 选项一起使用。在默认情况下，导出的文本文件中并不会有CREATE DATABASE,除非指定了这个参数
+
+--master-data=[value]
+    -- 通过该参数产生的备份转存文件主要用来建立一个replication。当value的值为1时，转存文件中记录的CHANGE MASTER语句。当value的值为2时，CHANGE MASTER语句被写出SQL注释。
+
+--master-data
+    -- 会自动忽略 --lock-tables 选项。如果没有使用--single-transcation选项，则会自动使用--lock-all-tables选项。
+
+--events
+    -- 备份事件调度器
+
+--routines
+    -- 备份存储过程和函数
+
+--triggers
+    -- 备份触发器
+
+--hex-blob
+    -- 将 BINARY VARBINARY BLOG BIT 列类型备份为十六进制的格式。mysqldump导出的文件一般时文本文件，但是如果导出的数据类型中有上述这些类型，在文本文件模式下可能有些字符不可见，若添加--hex-blob选项，结果会以十六进制的方式显示
+
+
+
+----------------------- SELECT ... INTO OUTFILE ---------------------------
+
+
+show variables like '%secure%';
+
+select * into outfile '/var/lib/mysql-files/t.sql' from t;
+
+mysql > test.sql -u root -p
+
+load data infile '/home/lgl/t.sql' into table t;
+
+SET@@foreign_key_checks = 0;
+LOAD DATA INFILE'/home/lgl/t.sql' INTO TABLE t;
+SET@@foreign_key_checks = 1;
+
+CREATE TABLE b(a INT, b INT, c INT,PRIMARY KEY(a))ENNGINE=INNODB;
+LOAD DATA INFILE'/home/lgl/b.sql' INTO TABLE b FIELDS TERMINATED BY ','(a,b) SET c=a+b;
+SELECT * FROM b;
+
+mysqlimport [options] db_name textfile1 [textfile2] ....
+mysqlimport --use-threads=2 test /home/lgl/a.sql /home/lgl/b.sql
+
+SHOW FULL PROCESSLIST \G;
+
+-------------- 二进制日志备份与恢复 ------------------
+
+-- 推荐配置
+[mysqld]
+log-bin = mysql-bin
+sync_binlog = 1
+innodb_support_xa = 1
+
+-- 在备份二进制文件之前，可以通过 FLUSH LOGS 来生成一个新的二进制日志文件，然后备份之前的二进制日志
+
+-- 恢复
+mysqlbinlog [options] log_file ...
+
+mysqlbinlog binlog.0000001 | mysql -u root -p test
+
+--------------- 主从--------------
+
+SHOW FULL PROCESSLIST \G;
+SHOW MASTER STATUS;
+SHOW SLAVE STATUS;
+
+-- 建议开启从服务上的 read-only 选项，这样能保证从服务器上的数据仅与主服务进行同步 避免其他线程修改数据
+[mysqld]
+read-only
+
+------------------------------ 事务 ------------------------------------
+
+
+CREATE TABLE test_load(
+a INT,
+b CHAR(10)
+)ENGINE=INNODB;
+ALTER TABLE test_load modify COLUMN b CHAR(200);
+
+DELIMITER //
+CREATE PROCEDURE p_load(count INT UNSIGNED)
+BEGIN
+DECLARE s INT UNSIGNED DEFAULT 1;
+DECLARE c CHAR(80) DEFAULT REPEAT('a',80);
+WHILE s <= count DO
+INSERT INTO test_load SELECT NULL,c;
+COMMIT;
+SET s = s+1;
+END WHILE;
+END;
+//
+DELIMITER ;
+
+CALL p_load(500000);
+
+
+show variables like 'innodb_flush_log_at_trx_commit'\G;
+set global innodb_flush_log_at_trx_commit=0;
+CALL p_load(5000);
+
+
+
+CREATE TABLE t(a int,primary key(a))engine=innodb;
+
+select @@autocommit \G;
+
+set @@completion_type = 1;
+
+BEGIN;
+  insert into t select 1;
+  commit work;
+
+  insert into t select 2;
+  insert into t select 2;
+  rollback;
+
+  select * from t;
 
 
 
