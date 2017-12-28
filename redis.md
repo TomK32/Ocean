@@ -411,13 +411,212 @@
                     
             migrate host port key|"" destination-db timeout [copy] [replace] [keys [key [key...]]        
             
+# scan
+    
+    String key = 'myset';
+    //定义pattern
+    String pattern = 'old:user*';
+    //每次游标从0开始
+    String sursor = 0; 
+    while(true){
+        //获取扫描结果
+        ScanResult ScanResult = redis.sscan(key,cursor,pattern);
+        List elements = scanResult.getResult();
+        if(elements != null && elements.size() > 0){
+            //批量删除
+            redis.srem(key,elements);
+        }
+        //获取新的游标
+        cursor = scanResult.getStringCursor();
+        //如果游标为0表示遍历结束
+        if('0'.equal(corsor)){
+            break;
+        }
+    }
+    
+    
+# Jedis
+    
+    Jedis jedis = new Jedis('127.0.0.1',6379);
+    jedis.set('hello','world');
+    String value = jedis.get('hello');
+    
+    String setResult = jedis.set('hello','world');
+    String getResult = jedis.get('hello');
+    System.out.println(setResult);
+    SYstem.out.println(getResult);
+    
+    --
+    
+    Jeids jedis = null;
+    try{
+        jedis = new Jedis('127.0.0.1',6379);
+        jedis.get('hello');
+    }catch (Exception e){
+        logger.error(e.getMessage(),e);
+    }finally{
+        if(jedis != null){
+            jedis.close();
+        }
+    }
+    
+    -- 
+    
+    jedis.set('hello','world');
+    jedis.get('hello');
+    jedis.incr('counter');
+    
+    jedis.hset('myhash','f1','v1');
+    jedis.hset('myhash','f2','v2');
+    jedis.hgetAll('myhash')
+    
+    jedis.rpush('mylist',1);
+    jedis.rpush('mylist',2);
+    jedis.rpush('mylist',3);
+    jedis.lrange('mylist',0,-1);
+    
+    jedis.sadd('myset','a');
+    jedis.sadd('myset','b');
+    jedis.sadd('myset','a');
+    jedis.smembers('myset');
+    
+    jedis.zadd('myzset',99,'tom'); 
+    jedis.zadd('myzset',98,'tom1'); 
+    jedis.zadd('myzset',97,'tom2'); 
+    jedis.zrangeWithScores('myzset',0,-1);
+    
+## Jedis 连接池的用法
+    所有Jedis对象预先放在池子中（JedisPool），每次要连接redis，只需要在池子中借，用完了再归还给池子
+               
+    客户端连接人redis使用的是tcp协议，直连的方式每次需要建立tcp连接，而连接池的方式是可以预先初始化好jedis连接，所以每次只需要从Jedis连接池中借用即可，而借用和归还是在本地进行的，只有少量的并发同步开销，远远小于新建tcp连接的开销。另外直连的方式无法限制jedis对象的个数，在极端情况下可能会造成连接泄露，而连接池的形式可以有效的保护可控制资源的使用。但是直连的方式也不是一无是处。
+    
+    Jedis 提供了 JedisPool 这个类作为对Jedis的连接池，同时使用了Apache的通用对象池工具common-pool作为资源的管理工具，下面是使用JedisPool操作Redis的代码示例：
+    
+    -- Jedis连接池（通常 JedisPool是单例的）
+        GenericObjectPollConfig poolConfig = new GenericObjectPoolConfig();
+        JedisPool jedispool = new JedisPool(poolConfig,'127.0.0.1',6379);
+        
+        Jedis jedis = null;
+        
+        try{
+            jedis = jedisPool.getResource();
+            jedis.get('hello');
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+        }finally{
+            if(jedis != null){
+                //如果使用JedisPool，close操作不是关闭连接，代表归还连接
+                jedis.close();
+            }
+        }
+        
+    -- jeids 的close（） 实现：
+        public void close(){
+            if(dataSource != null){
+                if(client.isBroken()){
+                    this.dataSouce.returnBrokenResource(this);
+                }else{
+                    this.dataSouce.returnResource(this);
+                }
+            }else{
+                client.close();
+            }
+        }           
+    
+# Pipeline
+
+    public void model(List<String> keys){
+        Jedis jedis = new Jedis('127.0.0.1');
+        Pipeline pipeline = jedis.pipelined();
+        for(String key : keys){
+            pipeline.del(key);
+        }
+        pipeline.sync();
+    }          
+       
+    --
+    
+    Jedis jedis = new Jedis('127.0.0.1');
+    Pipeline pipeline = jedis.pipeline();
+    pipeline.set('hello','world');
+    pipeline.incr('counter');
+    List<Object> resultList = pipeline.syncAndReturnAll();
+    for(Object object : resultList){
+        System.out.println(object);
+    }   
+        
+# Jedis 的 lua 脚本
+    
+    String key = 'name';
+    String script = 'return redis.call("get",KEYS[1])";
+    Object result = jedis.eval(script,1,key);
+    System.out.println(result);
+    
+    String key = 'nam';
+    Object result = jedis.evalsha(scriptSha,1,key);
+    System.out.println(result);
         
         
+#  redis-py
+
+    pip install redis
+    
+    import redis
+    client = redis.StrictRedis(host='127.0.0.1',port = 6379)
+    key = 'name'
+    setResult = client.set(key,'king')
+    print setResult
+    value = client.get(key)
+    print 'key:' + key + ', value:' + value;
+    
+    client.set('name','king')
+    client.get('name')
+    
+    client.incr('num')
+    
+    client.hset('hash','f1','v1')
+    client.hset('hash','f2','v2')
+    client.hgetall('hash')
+    
+    client.rpush('list',1)
+    client.rpush('list',2)
+    client.rpush('list',3)
+    client.lrange('list',0,-1)
+    
+    client.sadd('set','a')
+    client.sadd('set','b')
+    client.sadd('set','a')
+    client.smembers('set')
+    
+    client.zadd('set','99','king1')
+    client.zadd('set','991','king2')
+    client.zadd('set','992','king3')
+    client.zrange('set',0,-1,withscores=True)
+    
+# redis-py 中的 Pipeline
+    
+    import redis
+    client = redis.StrictRedis(host='127.0.0.1',port=6379)
+    
+    pipeline = client.pileline(transaction=False)
+    
+    pipeline.set('name','king')
+    pipeline.incr('num')
+    
+    result = pipeline.execute() 
+    
+    --
+    
+    import redis
+    def mdel(keys):
+        client = redis.StrictRedis(host='127.0.0.1',port = 6379)
+        pipeline = client.pipeline(transaction=False)
+        for key in keys:
+            print pipeline.delete(key)
+        return pipeline.execute();
         
-        
-        
-        
-        
+           
+           
         
         
         
