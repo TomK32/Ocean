@@ -8,3 +8,24 @@ Windows 资源（镜像）地址：
 
 docker镜像：
 	https://hub.docker.com/
+
+
+
+boostrap 相关：
+	1 . https://www.cnblogs.com/softwarefang/p/6094174.html			# bootstarp 弹出框介绍
+
+	2 . http://bootboxjs.com/documentation.html						# bootbox组件
+
+	3 . https://sweetalert.js.org/									# sweetalert
+		<link href="~/Styles/sweetalert.css" rel="stylesheet" />
+		<script src="~/Scripts/sweetalert.min.js"></script>
+
+	4 . http://www.ithao123.cn/content-2414918.html					# toastr.js组件	
+		引入js和css
+			<link href="~/Content/toastr/toastr.css" rel="stylesheet" />
+			<script src="~/Content/toastr/toastr.min.js"></script>
+
+		js初始化
+			<script type="text/javascript">
+			    toastr.options.positionClass = 'toast-bottom-right';
+			</script>	

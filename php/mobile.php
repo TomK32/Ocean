@@ -6,6 +6,8 @@
  * Time: 9:31
  */
 //继承拥有比组合更少的代码量
+
+new a();
 class car
 {
     public function addoil(){
