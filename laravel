@@ -1,0 +1,331 @@
+
+
+composer global require "laravel/installer"
+laravel new demo-laravel
+
+composer create-project laravel/laravel your-project-name 4.2.*
+composer create-project laravel/laravel your-project-name 5.0.*
+composer create-project laravel/laravel your-project-name 5.1.*		
+composer create-project laravel/laravel your-project-name 5.2.*
+composer create-project laravel/laravel your-project-name 5.3.*		
+composer create-project laravel/laravel your-project-name 5.4.*
+
+
+php artisan key:generate
+
+composer dump-autoload
+php artisan optimize
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# 创建数据表
+
+	1- php artisan make:migration create_user_table
+
+	2- database/migrations 可以发现新生成的文件，修改如下:
+
+	  	public function up()
+	    {
+	        Schema::create('user', function (Blueprint $table) {    //建立数据表user
+	            $table->increments('id');               //主键自增
+	            $table->string('name')->unique();       //'name'列唯一
+	            $table->string('password');             //'password'
+	            $table->string('email')->unique();      //'email'唯一
+	            $table->timestamps();                   //自动生成时间戳记录创建更新时间
+	        });
+	    }
+
+	3- php artisan migrate   
+
+	4- 修改 app/Providers/AppServiceProvider.php
+
+		public function boot()
+		{
+			// mysql 默认字符串长度（varchar）
+			Schema::defaultStringLength(191);
+		}
+
+
+composer create-project --prefer-dist laravel/laravel laravel-demo
+
+php artisan serve
+
+
+
+
+
+====================
+
+# laravel 安装器
+	composer global require "laravel/installer"
+
+# 创建项目
+	laravel new demo
+	compoer create-project --prefer-dist laravel/laravel demo
+
+# 设置密钥
+	php artisan key:generate
+
+# Apache .htaccess
+	Options +FollowSymLinks
+	RewriteEngine On
+
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule ^ index.php [L]
+
+# nginx
+	location / {
+    	try_files $uri $uri/ /index.php?$query_string;
+	}	
+
+
+
+==================== serve
+
+	php artisan serve
+	php artisan help serve
+	php artisan serve --port=8888
+
+	php artisan help make:controller
+
+	php artisan make:controller PostController
+
+	php artisan make:migration create_posts_table
+	php artisan migrate
+
+	php artisan
+	php artisan help make:model
+
+	php artisan make:model Post
+
+	php artisan tinker
+	$post = new \App\Post();
+	$post->title = 'This is post1';
+	$post->content = 'This is post1 content';
+	$post->save();
+
+	\App\Post::find(1)
+
+	\App\Post::where('title','This is title1')->first();
+
+	$post = \App\Post::find(2)
+	$post->title = 'This is post222'
+	$post->save()
+
+
+	factory(App\Post::class,20)->make()
+	factory(App\Post::class,20)->create()
+
+	php artisan tinker
+	app('Log')
+
+	php artisan make:controller RegisterController
+	php artisan make:controller LoginController
+	php artisan make:controller UserController
+
+	php artisan make:model User
+
+	php artisan make:policy PostPolicy
+
+	php artisan make:migration alter_users_table
+	php artisan migrate
+
+	php artisan make:migration create_comments_table
+	php artisan migrate
+
+
+	hasOne				一对一		用户 - 手机号
+	hasMany 			一对多		文章 - 评论
+	belongsTo 			一对多反向  评论 - 文章
+	belongsToMany 		多对多 		用户 - 角色
+	hasManyThrough      选层一对多  国家 - 作者 - 文章
+	morphMany           多态关联    文章/视频 - 评论
+	morphToMany         多态多对多  文章/视频 - 标签
+
+
+	php artisan make:model Comment
+
+	php artisan make:migration create_fans_table
+	php artisan migrate
+	php artisan make:model Fan
+
+	php artisan make:migration create_topics_table
+	php artisan make:migration create_post_topics_table
+	php artisan migrate
+	php artisan make:model Topic
+	php artisan make:model PostTopic
+	php artisan make:controller TopicController
+
+
+	php artisan tinker
+	$topic = new \App\Topic
+	$topic->name = 'travel'
+	$topic->save();
+
+	$topic = new \App\Topic
+	$topic->name = 'news'
+	$topic->save();
+
+
+	$this->validate(requeset(),[
+		'post_ids' => 'required|array'
+	]);
+
+	$post_ids = request('post_ids');
+	$topic_id = $topic->id;
+
+	foreach($post_ids as $post_id){
+		PostTopic::firstOrCreate(compact('topic_id','post_id'));
+	}	
+
+	return back();
+
+
+	composer require tamayo/laravel-scout-elastic
+
+	php artisan make:command ESInit
+
+	composer require guzzlehttp/guzzle
+
+	php artisan es:init
+
+
+	php artisan scout:import "\App\Post"
+
+	== 搜索
+
+	Route::get('posts/search','PostController@search');
+
+	public function serach()
+	{
+		return view('post.search');
+	}
+
+	search.blade.php
+
+
+
+
+	# 后台
+
+	后台设计
+		目录
+		模板
+		数据库
+
+	首页
+		路由
+		模板 layout
+
+	登录
+		路由
+		验证
+		登录/登出
+
+
+	app-Admin-Controllers
+
+	web.php
+		include_once('admin.php');
+
+	admin.php
+		Route::group(['prefix'=>'admin'],function(){
+			Route::get('login','LoginController@index');
+			Route::post('login','LoginController@login');
+			Route::get('logout','LoginController@logout');
+			Route::get('home','\App\Admin\Controllers\HomeController@index');
+		})
+
+	- 后台模板
+		resources->views->admin	
+
+	- 嵌入 adminlte
+		composer require "almasaeed2010/adminlte=~2.0"
+
+	- LoginController.php
+
+		public function index()
+		{
+			return view('admin.login.index');
+		}
+
+		public function login()
+		{
+		
+		}
+
+		public function logout()
+		{
+		
+		}
+
+
+	php artisan make:migration create_admin_users_table	
+
+
+
+# 队列
+	NoticeController.php
+		$notice = Notice::create(request(['title','content']));
+	    $this->dispatch(new SendMessage($notice));
+
+	SendMessage.php   
+	    private $notice;
+
+	    public function __construct(Notice $notice)
+	    {
+	        $this->notice = $notice;
+	    }
+
+	    public function handle()
+	    {
+	        // 通知每个用户系统消息
+	        $users = User::all();
+	        foreach($users as $user){
+	            $user->addNotices($this->notice);
+	        }
+	    }
+
+	User.php
+		//用户收到的通知
+	    public function notices()
+	    {
+	        return $this->belongsToMany(Notice::class,'user_notice','user_id','notice_id')->withPivot(['user_id','notice_id']);
+	    }
+
+	    // 给用户增加通知
+	    public function addNotices($notice)
+	    {
+	        return $this->notices()->save($notice);
+	    }  
+
+
+# 优化
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

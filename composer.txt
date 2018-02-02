@@ -24,3 +24,17 @@
 依赖管理工具 composer ：
 	中文网站：http://docs.phpcomposer.com/00-intro.html	
 
+
+php composer.phar init
+composer init  		
+
+php composer.phar install
+composer install
+
+php composer.phar update
+php composer.phar update vendor/package vendor/package2
+php composer.phar update vendor/*
+composer update
+
+
+
